@@ -11,12 +11,12 @@ plugins {
 android {
     namespace = "com.example.report_screen_with_firebase"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "27.0.12077973"           // eta jai thakuk ei number ta dite hobe
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-        isCoreLibraryDesugaringEnabled = true
+        isCoreLibraryDesugaringEnabled = true           // eta must dite hobe jhamela hole
     }
 
     kotlinOptions {
@@ -47,7 +47,7 @@ flutter {
     source = "../.."
 }
 
-dependencies {
+dependencies {    // ei dependency ta add korte hobe must, tahole ar kno error asbe na.
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
 

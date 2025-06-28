@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.report_screen_with_firebase">
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> // ei 2 line extra add korte hobe notification er jonno
 
     <application
         android:label="report_screen_with_firebase"

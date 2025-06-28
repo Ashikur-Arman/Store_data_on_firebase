@@ -16,7 +16,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-        isCoreLibraryDesugaringEnabled = true           // eta must dite hobe jhamela hole
+        isCoreLibraryDesugaringEnabled = true           // eta must dite hobe jokhon notification dite cacchi
     }
 
     kotlinOptions {

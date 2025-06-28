@@ -1,8 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import 'display_data_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -12,32 +10,144 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  // for text editor Controller
-  TextEditingController nameController = TextEditingController();
-  TextEditingController addressController = TextEditingController();
-  TextEditingController professionController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController professionController = TextEditingController();
 
+  final CollectionReference myItems =
+  FirebaseFirestore.instance.collection("Store Data");
 
-  final CollectionReference myItems = FirebaseFirestore.instance.collection("Store Data");  // collecting name
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotification();
+  }
+
+  void _initializeNotification() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+    InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> _showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'your_channel_id',
+      'your_channel_name',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      platformChannelSpecifics,
+    );
+  }
 
   Future<void> storeData() async {
     return showDialog(
-        context: context,
-        builder: (BuildContext context){
-      return myDialogBox(context: context, onPressed: (){
-        String name = nameController.text;
-        String address = addressController.text;
-        String profession = professionController.text;
+      context: context,
+      builder: (BuildContext context) {
+        return myDialogBox(
+          context: context,
+          onPressed: () async {
+            String name = nameController.text.trim();
+            String address = addressController.text.trim();
+            String profession = professionController.text.trim();
 
-        myItems.add({
-          'name': name,
-          'position': address,
-          'proffesion': profession,
-        });
-        Navigator.pop(context);  // terminate the dialog after storing the items
+            try {
+              await myItems.add({
+                'name': name,
+                'position': address,
+                'proffesion': profession,
+              });
 
-      });
-     },
+              await _showNotification("Emergency!!!", "Data stored successfully!");
+            } catch (e) {
+              await _showNotification("Error", "Failed to store data.");
+            }
+
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
+  Dialog myDialogBox({
+    required BuildContext context,
+    required VoidCallback onPressed,
+  }) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Store data from users",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                )
+              ],
+            ),
+            commonTextField("eg. Arman", "Enter your name", nameController),
+            commonTextField("eg. Ban", "Enter your address", addressController),
+            commonTextField("eg. Dev", "Enter your position", professionController),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              onPressed: onPressed,
+              child: const Text(
+                "Store",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Padding commonTextField(String hint, String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          hintText: hint,
+          labelText: label,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: Colors.blue, width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: Colors.black, width: 2),
+          ),
+        ),
+      ),
     );
   }
 
@@ -45,8 +155,8 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text("Hello"),
         centerTitle: true,
-        title: Text("Hello"),
         backgroundColor: Colors.blue,
       ),
       floatingActionButton: FloatingActionButton(
@@ -58,10 +168,7 @@ class _ReportScreenState extends State<ReportScreen> {
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const DisplayDataScreen()),
-            );
+            // You can navigate to DisplayDataScreen if needed
           },
           child: const Text(
             "Go to Data Page",
@@ -71,75 +178,4 @@ class _ReportScreenState extends State<ReportScreen> {
       ),
     );
   }
-  Dialog myDialogBox({
-    required BuildContext context,
-    required VoidCallback onPressed,})
-  {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Container(
-          // height: 150, // ✅ give fixed height
-          // width: 300,  // ✅ give fixed width
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Store data from users",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18,
-                   ),
-                 ),
-                IconButton(onPressed: (){
-                  Navigator.pop(context);
-                }, icon: const Icon(Icons.close))
-                ],
-              ),
-              commonTextField("eg. Arman","Enter your name",nameController),
-              commonTextField("eg. Ban","Enter your address",addressController),
-              commonTextField("eg. Dev","Enter your position",professionController),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                onPressed: onPressed,
-                child: Text("Store",style: TextStyle(fontWeight: FontWeight.bold,
-                  fontSize: 18, color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 10,),
-            ],
-            ),
-          ),
-        ),
-      );
-    }
-    Padding  commonTextField(hint, label,controller){
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-        hintText: hint,
-        labelText: label,
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: Colors.blue,width: 2
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: Colors.black,width: 2
-          ),
-        ),
-      ),
-      ),
-     );
-
-    }
 }
-
-
